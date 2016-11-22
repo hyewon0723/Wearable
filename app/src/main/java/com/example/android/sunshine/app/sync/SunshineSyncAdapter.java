@@ -92,48 +92,44 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.v(LOG_TAG + " GoogleApiClient", "onConnected");
-        sendWeatherToWearable();
+        syncWeatherDataWithWearable();
     }
 
     @Override
     public void onConnectionSuspended(int i) {
+        Log.v(LOG_TAG + " GoogleApiClient", "onConnectionSuspended");
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.v(LOG_TAG + " GoogleApiClient", "onConnectionFailed");
     }
 
     private void setUpGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(getContext())
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Wearable.API)
-                .build();
+        Log.v(LOG_TAG + " GoogleApiClient", "setUpGoogleApiClient");
+        mGoogleApiClient = new GoogleApiClient.Builder(getContext()).addConnectionCallbacks(this).addOnConnectionFailedListener(this).addApi(Wearable.API).build();
     }
 
-    private void sendWeatherToWearable() {
-        String locationQuery = Utility.getPreferredLocation(getContext());
+    //Sync weather data with wearable
+    private void syncWeatherDataWithWearable() {
 
-        Uri weatherUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(locationQuery, System.currentTimeMillis());
-        Cursor cursor = getContext().getContentResolver().query(weatherUri, NOTIFY_WEATHER_PROJECTION, null, null, null);
+        Uri weatherURI= WeatherContract.WeatherEntry.buildWeatherLocationWithDate(Utility.getPreferredLocation(getContext()), System.currentTimeMillis());
+        Cursor cursor = getContext().getContentResolver().query(weatherURI, NOTIFY_WEATHER_PROJECTION, null, null, null);
 
         if (cursor.moveToFirst()) {
-            //We are the position 0, defaulted to today's weather and temperatures from mobile
-            int weatherId = cursor.getInt(INDEX_WEATHER_ID);
             double high = cursor.getDouble(INDEX_MAX_TEMP);
             double low = cursor.getDouble(INDEX_MIN_TEMP);
-
-            int artIcon = Utility.getArtResourceForWeatherCondition(weatherId);
+            int weatherId = cursor.getInt(INDEX_WEATHER_ID);
+            int icon = Utility.getArtResourceForWeatherCondition(weatherId);
 
             PutDataMapRequest sendRequest = PutDataMapRequest.create(getContext().getString(R.string.data_path));
             sendRequest.getDataMap().putString(getContext().getString(R.string.high_key), Utility.formatTemperature(getContext(), high));
             sendRequest.getDataMap().putString(getContext().getString(R.string.low_key), Utility.formatTemperature(getContext(), low));
-            sendRequest.getDataMap().putInt(getContext().getString(R.string.asset_key),  artIcon);
-            sendRequest.getDataMap().putLong(getContext().getString(R.string.time_key), System.currentTimeMillis());
+            sendRequest.getDataMap().putInt(getContext().getString(R.string.asset_key),  icon);
 
-            PutDataRequest sendDataRequest = sendRequest.asPutDataRequest().setUrgent();
+            PutDataRequest dataRequest = sendRequest.asPutDataRequest().setUrgent();
 
-            Wearable.DataApi.putDataItem(mGoogleApiClient, sendDataRequest)
+            Wearable.DataApi.putDataItem(mGoogleApiClient, dataRequest)
                     .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                         @Override
                         public void onResult(DataApi.DataItemResult dataItemResult) {
@@ -166,7 +162,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
 
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
-        Log.d(LOG_TAG, "Starting sync");
+        Log.d(LOG_TAG, "onPerformSync");
 
         // We no longer need just the location String, but also potentially the latitude and
         // longitude, in case we are syncing based on a new Place Picker API result.
@@ -174,11 +170,9 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
         String locationQuery = Utility.getPreferredLocation(context);
         String locationLatitude = String.valueOf(Utility.getLocationLatitude(context));
         String locationLongitude = String.valueOf(Utility.getLocationLongitude(context));
-
-        // Setting up GoogleApiClient for listening events
         setUpGoogleApiClient();
 
-        // Connect the Google ApiClient
+        // Connect with the Google ApiClient
         if (mGoogleApiClient != null) {
             mGoogleApiClient.connect();
         }

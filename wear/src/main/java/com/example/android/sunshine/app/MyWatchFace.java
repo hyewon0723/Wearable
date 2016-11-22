@@ -56,9 +56,7 @@ import com.google.android.gms.wearable.Wearable;
 import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -119,11 +117,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mCalendar.setTimeZone(TimeZone.getDefault());
-                mDayofWeekFormat = new SimpleDateFormat("EEE", Locale.getDefault());
-                mDayofWeekFormat.setCalendar(mCalendar);
-                mMediumDateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM);
-                mMediumDateFormat.setCalendar(mCalendar);
                 mTime.clear(intent.getStringExtra("time-zone"));
                 mTime.setToNow();
                 invalidate();
@@ -141,11 +134,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
         Paint mBackgroundPaint;
 
         final String requestDataPath = "/wear-request-path";
-
-        DateFormat mMediumDateFormat;
-        Calendar mCalendar;
         Date mDate;
-        SimpleDateFormat mDayofWeekFormat;
         Bitmap mBitmap;
         float mIconXOffset;
         float mIconYOffset;
@@ -199,8 +188,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(resources.getColor(R.color.background));
 
-            mCalendar = Calendar.getInstance();
-
             mTime = new Time();
             mTimeYOffset = resources.getDimension(R.dimen.digital_time_y_offset);
             mTimePaint = new Paint();
@@ -232,11 +219,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mDate = new Date();
             capabilityName = "mobile_request";
             mNodeId = null;
-            mDayofWeekFormat = new SimpleDateFormat("EEE", Locale.getDefault());
-            mDayofWeekFormat.setCalendar(mCalendar);
-            mMediumDateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM);
-            mMediumDateFormat.setCalendar(mCalendar);
-
             mTime = new Time();
         }
 
@@ -253,12 +235,6 @@ public class MyWatchFace extends CanvasWatchFaceService {
             if (visible) {
                 registerReceiver();
                 mGoogleApiClient.connect();
-
-                mCalendar.setTimeZone(TimeZone.getDefault());
-                mDayofWeekFormat = new SimpleDateFormat("EEE", Locale.getDefault());
-                mDayofWeekFormat.setCalendar(mCalendar);
-                mMediumDateFormat = DateFormat.getDateInstance(DateFormat.MEDIUM);
-                mMediumDateFormat.setCalendar(mCalendar);
 
                 mTime.clear(TimeZone.getDefault().getID());
                 mTime.setToNow();
@@ -468,11 +444,11 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
         public void updateCapability(CapabilityInfo capabilityInfo) {
             Set<Node> capableNodes = capabilityInfo.getNodes();
-            mNodeId = findBestNodeId(capableNodes);
+            mNodeId = findNodeId(capableNodes);
             requestWeatherData();
         }
 
-        public String findBestNodeId(Set<Node> nodes) {
+        public String findNodeId(Set<Node> nodes) {
             String bestNodeId = null;
             for(Node node : nodes) {
                 if(node.isNearby()) {
