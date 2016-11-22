@@ -30,10 +30,9 @@ public class DataLayerListenerService extends WearableListenerService {
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         super.onMessageReceived(messageEvent);
-        Log.v(LOG_TAG, "Received a message");
 
         if(messageEvent.getPath().equals(requestDataPath)) {
-            Log.v(LOG_TAG, "we received a message from the wearable to fetch data and send it over");
+            Log.v(LOG_TAG, "Received a message from the wearable");
 
             Context context = DataLayerListenerService.this.getApplicationContext();
             SunshineSyncAdapter.syncImmediately(context);

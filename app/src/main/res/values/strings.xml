@@ -236,4 +236,10 @@
     <!-- For Google Places API Attributions -->
     <string name="attribution_text">Powered by Google</string>
 
+    <string name="data_path" translatable="false">/weather</string>
+    <string name="time_key" translatable="false">time</string>
+    <string name="high_key" translatable="false">highTemp</string>
+    <string name="low_key" translatable="false">lowTemp</string>
+    <string name="asset_key" translatable="false">assetDataMap</string>
+
 </resources>
